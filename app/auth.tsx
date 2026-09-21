@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "expo-router";
 import {
   Image,
   KeyboardAvoidingView,
@@ -26,6 +27,7 @@ const credentialsSchema = z.object({
 
 export default function AuthScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -89,6 +91,13 @@ export default function AuthScreen() {
             One Ecosystem. <Text className="text-lime">Every Journey.</Text>
           </Text>
         </View>
+
+        <Pressable 
+          onPress={() => router.replace("/(tabs)/explore")}
+          className="mt-8 h-12 w-full rounded-xl bg-primary/20 border border-primary/40 items-center justify-center"
+        >
+          <Text className="font-display-black text-sm text-lime uppercase tracking-widest">Skip Login for Demo</Text>
+        </Pressable>
 
         <View className="mt-10">
           <Text className="font-display-black text-3xl text-foreground">

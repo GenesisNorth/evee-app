@@ -68,22 +68,14 @@ function RootLayoutNav() {
 
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#040404" } }}>
-      <Stack.Protected guard={!session}>
-        <Stack.Screen name="auth" />
-      </Stack.Protected>
-
-      <Stack.Protected guard={!!session && !isOnboarded}>
-        <Stack.Screen name="onboarding" />
-      </Stack.Protected>
-
-      <Stack.Protected guard={!!session && isOnboarded}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="vehicle/[id]" />
-        <Stack.Screen name="compare" />
-        <Stack.Screen name="finance/[vehicleId]" />
-        <Stack.Screen name="insure/[vehicleId]" />
-        <Stack.Screen name="activity" />
-      </Stack.Protected>
+      <Stack.Screen name="auth" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="vehicle/[id]" />
+      <Stack.Screen name="compare" />
+      <Stack.Screen name="finance/[vehicleId]" />
+      <Stack.Screen name="insure/[vehicleId]" />
+      <Stack.Screen name="activity" />
     </Stack>
   );
 }

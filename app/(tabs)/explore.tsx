@@ -4,6 +4,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import Slider from "@react-native-community/slider";
 import { GitCompare, Search, SlidersHorizontal } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
@@ -150,11 +151,31 @@ export default function ExploreScreen() {
           {isLoading ? "Loading…" : `${filtered.length} vehicles`}
         </Text>
         <View className="mt-3 flex-row flex-wrap gap-3">
-          {filtered.map((v) => (
-            <View key={v.id} className="w-[47%]">
+          {filtered.map((v, index) => (
+            <Animated.View 
+              key={v.id} 
+              className="w-[47%]"
+              entering={FadeInDown.delay(index * 100).springify()}
+            >
               <VehicleCard v={v} />
-            </View>
+            </Animated.View>
           ))}
+        </View>
+
+        <View className="mt-8 rounded-3xl border border-primary/20 bg-primary/10 p-6 items-center">
+          <View className="h-12 w-12 rounded-full bg-primary/20 items-center justify-center mb-3">
+            <Search size={24} color="#b3f835" />
+          </View>
+          <Text className="font-display-black text-xl text-foreground text-center">Can't find your EV?</Text>
+          <Text className="mt-1 mb-5 text-center text-xs text-muted-foreground">
+            Tell us exactly what you're looking for, and we'll source it for you through our partner network.
+          </Text>
+          <Pressable
+            onPress={() => router.push("/sourcing")}
+            className="h-12 px-8 rounded-xl bg-lime items-center justify-center"
+          >
+            <Text className="text-sm font-semibold text-primary-foreground">Source an EV</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>

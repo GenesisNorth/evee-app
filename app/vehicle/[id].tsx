@@ -3,13 +3,17 @@ import { Pressable, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Animated, { useAnimatedScrollHandler, useSharedValue, useAnimatedStyle, interpolate, Extrapolation } from "react-native-reanimated";
 import {
   Battery,
   Check,
   Clock,
   Gauge,
   LoaderCircle,
+  MapPin,
+  MessageCircle,
   ShieldCheck,
+  TrendingDown,
   Users,
   Wallet,
   Zap,
@@ -31,6 +35,27 @@ export default function VehicleDetailScreen() {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [reserving, setReserving] = useState(false);
+
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const imageStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: interpolate(scrollY.value, [0, 200], [0, 80], Extrapolation.CLAMP),
+        },
+        {
+          scale: interpolate(scrollY.value, [-100, 0], [1.3, 1], Extrapolation.CLAMP),
+        }
+      ],
+      opacity: interpolate(scrollY.value, [0, 200], [1, 0.5], Extrapolation.CLAMP),
+    };
+  });
 
   const { data: vehicle, isLoading } = useQuery({
     queryKey: ["vehicle", id],
@@ -97,13 +122,20 @@ export default function VehicleDetailScreen() {
         showBack
         right={<SaveButton vehicleId={vehicle.id} />}
       />
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} className="px-5">
-        <VehicleImage
-          src={vehicle.image_url}
-          alt={`${vehicle.make} ${vehicle.model}`}
-          seed={`${vehicle.make}${vehicle.model}`}
-          className="aspect-[16/10] w-full overflow-hidden rounded-3xl"
-        />
+      <Animated.ScrollView 
+        contentContainerStyle={{ paddingBottom: 40 }} 
+        className="px-5"
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
+        <Animated.View style={imageStyle} className="z-[-1]">
+          <VehicleImage
+            src={vehicle.image_url}
+            alt={`${vehicle.make} ${vehicle.model}`}
+            seed={`${vehicle.make}${vehicle.model}`}
+            className="aspect-[16/10] w-full overflow-hidden rounded-3xl"
+          />
+        </Animated.View>
 
         <View className="mt-5 flex-row items-end justify-between">
           <View>
@@ -135,6 +167,33 @@ export default function VehicleDetailScreen() {
           </View>
         )}
 
+        <View className="mt-5 flex-row items-center gap-3 rounded-2xl border border-white/[0.06] bg-card p-4">
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+            <MapPin size={18} color="#b3f835" />
+          </View>
+          <View className="flex-1">
+            <Text className="font-display text-sm text-foreground">Available Now</Text>
+            <Text className="text-[11px] text-muted-foreground">In stock at Evee Hub, Victoria Island</Text>
+          </View>
+        </View>
+
+        <View className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+          <View className="mb-3 flex-row items-center gap-2">
+            <TrendingDown size={16} color="#b3f835" />
+            <Text className="font-display-black text-sm text-foreground">Total Cost of Ownership</Text>
+          </View>
+          <View className="flex-row items-end justify-between">
+            <View>
+              <Text className="text-xs text-muted-foreground">Est. monthly savings</Text>
+              <Text className="mt-1 font-display-black text-2xl text-lime">+ {formatCurrency(240)}</Text>
+            </View>
+            <View className="items-end">
+              <Text className="text-[10px] uppercase tracking-widest text-muted-foreground">Vs. Petrol</Text>
+              <Text className="text-xs font-medium text-foreground">Save {formatCurrency(2880)}/yr</Text>
+            </View>
+          </View>
+        </View>
+
         <View className="mt-6 flex-row gap-3">
           <Pressable
             onPress={() => router.push(`/finance/${vehicle.id}`)}
@@ -154,11 +213,19 @@ export default function VehicleDetailScreen() {
           </Pressable>
         </View>
 
-        <View className="mt-6">
+        <View className="mt-6 flex-row gap-3">
+          <Button
+            variant="outline"
+            onPress={() => Toast.show({ type: "info", text1: "Connecting you to an agent..." })}
+            className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl"
+          >
+            <MessageCircle size={16} color="#fafafa" />
+            <Text className="text-sm font-semibold text-foreground">Enquire</Text>
+          </Button>
           <Button
             onPress={reserve}
             disabled={reserving || alreadyReserved}
-            className="h-12 w-full rounded-xl"
+            className="h-12 flex-1 rounded-xl"
           >
             {reserving ? (
               <LoaderCircle size={16} color="#060606" />
@@ -166,11 +233,11 @@ export default function VehicleDetailScreen() {
               <Check size={16} color="#060606" />
             ) : null}
             <Text className="text-sm font-semibold text-primary-foreground">
-              {alreadyReserved ? "Reserved" : "Reserve this EV"}
+              {alreadyReserved ? "Reserved" : "Reserve"}
             </Text>
           </Button>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }
