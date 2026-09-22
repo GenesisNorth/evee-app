@@ -73,6 +73,14 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="vehicle/[id]" />
       <Stack.Screen name="compare" />
+      <Stack.Screen name="charge" />
+      <Stack.Screen name="service" />
+      <Stack.Screen name="learn" />
+      <Stack.Screen name="connect" />
+      <Stack.Screen name="finance-portal" />
+      <Stack.Screen name="finance/apply" />
+      <Stack.Screen name="insure-portal" />
+      <Stack.Screen name="insure/quote" />
       <Stack.Screen name="finance/[vehicleId]" />
       <Stack.Screen name="insure/[vehicleId]" />
       <Stack.Screen name="activity" />

@@ -1,22 +1,41 @@
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { Battery, Gauge, Zap, type LucideIcon } from "lucide-react-native";
+import { Battery, Gauge, Zap, CheckCircle2, type LucideIcon } from "lucide-react-native";
 import { formatCurrency } from "@/lib/format";
 import type { Vehicle } from "@/lib/types";
 import { SaveButton } from "@/components/save-button";
 import { VehicleImage } from "@/components/vehicle-image";
+import { cn } from "@/lib/utils";
 
 type VehicleCardData = Pick<
   Vehicle,
   "id" | "make" | "model" | "price" | "range_km" | "battery_kwh" | "acceleration_0_100" | "image_url"
 >;
 
-export function VehicleCard({ v }: { v: VehicleCardData }) {
+interface VehicleCardProps {
+  v: VehicleCardData;
+  selected?: boolean;
+  onSelect?: () => void;
+}
+
+export function VehicleCard({ v, selected, onSelect }: VehicleCardProps) {
   const router = useRouter();
+
+  const handlePress = () => {
+    if (onSelect) {
+      onSelect();
+    } else {
+      router.push(`/vehicle/${v.id}`);
+    }
+  };
+
   return (
     <Pressable
-      onPress={() => router.push(`/vehicle/${v.id}`)}
-      className="overflow-hidden rounded-2xl border border-white/[0.06] bg-card"
+      onPress={handlePress}
+      className={cn(
+        "overflow-hidden rounded-2xl border bg-card",
+        selected ? "border-primary border-2" : "border-white/[0.06]"
+      )}
       style={({ pressed }) => pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }}
     >
       <View className="relative">
@@ -26,6 +45,13 @@ export function VehicleCard({ v }: { v: VehicleCardData }) {
           seed={`${v.make}${v.model}`}
           className="aspect-[16/10] w-full"
         />
+        {selected && (
+          <View className="absolute inset-0 bg-primary/20 items-center justify-center">
+            <View className="h-10 w-10 bg-primary rounded-full items-center justify-center">
+              <CheckCircle2 size={24} color="#060606" />
+            </View>
+          </View>
+        )}
         <View className="absolute right-2 top-2">
           <SaveButton vehicleId={v.id} />
         </View>

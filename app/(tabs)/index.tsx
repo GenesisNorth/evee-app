@@ -104,13 +104,13 @@ function HeroCard() {
   );
 }
 
-const tiles: { label: string; hint: string; icon: LucideIcon; to: "/explore" | "/activity" | "/garage" }[] = [
-  { label: "Finance", hint: "Flexible options", icon: Wallet, to: "/explore" },
-  { label: "Charge", hint: "Find stations", icon: Zap, to: "/activity" },
-  { label: "Service", hint: "Book & maintain", icon: Wrench, to: "/garage" },
-  { label: "Insure", hint: "Protect your EV", icon: ShieldCheck, to: "/explore" },
-  { label: "Learn", hint: "Grow your knowledge", icon: GraduationCap, to: "/activity" },
-  { label: "Connect", hint: "People & community", icon: Users, to: "/activity" },
+const tiles: { label: string; hint: string; icon: LucideIcon; to: any }[] = [
+  { label: "Finance", hint: "Flexible options", icon: Wallet, to: "/finance-portal" },
+  { label: "Charge", hint: "Find stations", icon: Zap, to: "/charge" },
+  { label: "Service", hint: "Book & maintain", icon: Wrench, to: "/service" },
+  { label: "Insure", hint: "Protect your EV", icon: ShieldCheck, to: "/insure-portal" },
+  { label: "Learn", hint: "Grow your knowledge", icon: GraduationCap, to: "/learn" },
+  { label: "Connect", hint: "People & community", icon: Users, to: "/connect" },
 ];
 
 function EcosystemGrid() {

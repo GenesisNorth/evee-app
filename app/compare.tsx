@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { ScrollView } from "react-native-gesture-handler";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, X } from "lucide-react-native";
@@ -22,7 +23,9 @@ const rows: [string, (v: Vehicle) => string][] = [
 ];
 
 export default function CompareScreen() {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const params = useLocalSearchParams();
+  const initialIds = typeof params.ids === "string" ? params.ids.split(",") : [];
+  const [selectedIds, setSelectedIds] = useState<string[]>(initialIds);
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles-compare"],
     queryFn: async () => {

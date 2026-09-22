@@ -23,6 +23,8 @@ export default function ExploreScreen() {
   const [maxPrice, setMaxPrice] = useState(200000);
   const [minRange, setMinRange] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ["vehicles"],
@@ -60,11 +62,17 @@ export default function ExploreScreen() {
             <Text className="font-display-black text-2xl text-foreground">Find your EV</Text>
           </View>
           <Pressable
-            onPress={() => router.push("/compare")}
+            onPress={() => {
+              setCompareMode(!compareMode);
+              if (compareMode) setSelectedIds([]);
+            }}
             accessibilityLabel="Compare vehicles"
-            className="h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]"
+            className={cn(
+              "h-10 w-10 items-center justify-center rounded-full border",
+              compareMode ? "border-primary bg-primary/20" : "border-white/10 bg-white/[0.04]"
+            )}
           >
-            <GitCompare size={16} color="#fafafa" />
+            <GitCompare size={16} color={compareMode ? "#b3f835" : "#fafafa"} />
           </Pressable>
         </View>
 
@@ -157,7 +165,21 @@ export default function ExploreScreen() {
               className="w-[47%]"
               entering={FadeInDown.delay(index * 100).springify()}
             >
-              <VehicleCard v={v} />
+              <VehicleCard
+                v={v}
+                selected={selectedIds.includes(v.id)}
+                onSelect={
+                  compareMode
+                    ? () => {
+                        if (selectedIds.includes(v.id)) {
+                          setSelectedIds(selectedIds.filter((id) => id !== v.id));
+                        } else if (selectedIds.length < 3) {
+                          setSelectedIds([...selectedIds, v.id]);
+                        }
+                      }
+                    : undefined
+                }
+              />
             </Animated.View>
           ))}
         </View>
@@ -178,6 +200,28 @@ export default function ExploreScreen() {
           </Pressable>
         </View>
       </ScrollView>
+
+      {compareMode && selectedIds.length > 0 && (
+        <Animated.View
+          entering={FadeInDown.springify()}
+          className="absolute bottom-[90px] left-5 right-5 overflow-hidden rounded-2xl bg-[#141414] border border-white/10 flex-row items-center justify-between p-4 shadow-xl"
+        >
+          <View>
+            <Text className="text-xs text-muted-foreground">Comparing</Text>
+            <Text className="font-display-black text-lg text-foreground">{selectedIds.length} of 3</Text>
+          </View>
+          <Pressable
+            onPress={() => {
+              setCompareMode(false);
+              router.push(`/compare?ids=${selectedIds.join(",")}`);
+              setSelectedIds([]);
+            }}
+            className="bg-lime rounded-xl px-5 py-3"
+          >
+            <Text className="font-semibold text-primary-foreground text-sm">Compare Now</Text>
+          </Pressable>
+        </Animated.View>
+      )}
     </View>
   );
 }
