@@ -1,145 +1,163 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { useState } from "react";
+import { View, Text, Pressable, Image, ScrollView, Switch } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, MapPin, User, Zap } from "lucide-react-native";
-import Toast from "react-native-toast-message";
-import { supabase } from "@/lib/supabase";
+import { 
+  User, 
+  Settings, 
+  CreditCard, 
+  Bell, 
+  Moon, 
+  Shield, 
+  HelpCircle,
+  ChevronRight,
+  LogOut
+} from "lucide-react-native";
 import { useSession } from "@/hooks/use-session";
 import { useProfile } from "@/hooks/use-profile";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { supabase } from "@/lib/supabase";
+
+function SettingsGroup({ title, children }: { title: string, children: React.ReactNode }) {
+  return (
+    <View className="mt-6">
+      <Text className="mb-2 px-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        {title}
+      </Text>
+      <View className="overflow-hidden rounded-2xl bg-card border border-white/[0.06]">
+        {children}
+      </View>
+    </View>
+  );
+}
+
+function SettingsRow({ 
+  icon: Icon, 
+  title, 
+  value, 
+  showToggle, 
+  toggleValue, 
+  onToggle,
+  isLast 
+}: { 
+  icon: any, 
+  title: string, 
+  value?: string,
+  showToggle?: boolean,
+  toggleValue?: boolean,
+  onToggle?: (v: boolean) => void,
+  isLast?: boolean 
+}) {
+  return (
+    <Pressable className={`flex-row items-center px-4 py-3.5 ${!isLast ? 'border-b border-white/5' : ''}`}>
+      <View className="h-8 w-8 items-center justify-center rounded-lg bg-white/5 mr-3">
+        <Icon size={16} color="#fafafa" />
+      </View>
+      <Text className="flex-1 font-medium text-foreground">{title}</Text>
+      
+      {value && <Text className="text-sm text-muted-foreground mr-2">{value}</Text>}
+      
+      {showToggle ? (
+        <Switch 
+          value={toggleValue} 
+          onValueChange={onToggle}
+          trackColor={{ false: "#333", true: "#b3f835" }}
+          thumbColor="#fff"
+        />
+      ) : (
+        <ChevronRight size={16} color="#4d4d4d" />
+      )}
+    </Pressable>
+  );
+}
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useSession();
   const { data: profile } = useProfile();
-  const queryClient = useQueryClient();
 
-  const [fullName, setFullName] = useState("");
-  const [city, setCity] = useState("");
-  const [country, setCountry] = useState("");
-  const [phone, setPhone] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (profile) {
-      setFullName(profile.full_name ?? "");
-      setCity(profile.city ?? "");
-      setCountry(profile.country ?? "");
-      setPhone(profile.phone ?? "");
-    }
-  }, [profile]);
-
-  async function save() {
-    if (!user) return;
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ full_name: fullName, city, country, phone })
-        .eq("id", user.id);
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      Toast.show({ type: "success", text1: "Profile updated" });
-    } catch (e) {
-      Toast.show({ type: "error", text1: e instanceof Error ? e.message : "Failed" });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function signOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
-  }
+  const [darkMode, setDarkMode] = useState(true);
+  const [notifications, setNotifications] = useState(true);
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-background">
-      <ScrollView
-        contentContainerStyle={{ paddingTop: Math.max(insets.top, 18), paddingBottom: 140 }}
+    <View className="flex-1 bg-background">
+      <ScrollView 
+        contentContainerStyle={{ paddingTop: Math.max(insets.top, 18), paddingBottom: 140 }} 
         className="px-5"
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
       >
-        <View className="flex-row items-center gap-4">
-          <View className="h-16 w-16 items-center justify-center rounded-full bg-graphite" style={{ borderWidth: 2, borderColor: "rgba(179,248,53,0.7)" }}>
-            <User size={28} color="#b3f835" />
+        {/* Profile Header */}
+        <View className="items-center mt-4 mb-2">
+          <View className="relative">
+            <Image
+              source={profile?.avatar_url ? { uri: profile.avatar_url } : require("../../assets/images/avatar-fallback.jpg")}
+              style={{ height: 96, width: 96, borderRadius: 48, borderWidth: 3, borderColor: "rgba(179,248,53,0.7)" }}
+            />
+            <Pressable className="absolute bottom-0 right-0 h-8 w-8 items-center justify-center rounded-full bg-lime border-4 border-background">
+              <Settings size={14} color="#060606" />
+            </Pressable>
           </View>
-          <View className="min-w-0 flex-1">
-            <Text numberOfLines={1} className="font-display-black text-2xl text-foreground">
-              {fullName || "Your profile"}
-            </Text>
-            <Text numberOfLines={1} className="text-[11px] text-muted-foreground">
-              {user?.email}
-            </Text>
-            {(city || country) && (
-              <View className="mt-0.5 flex-row items-center gap-1">
-                <MapPin size={12} color="#b3f835" />
-                <Text className="text-[11px] text-muted-foreground">{[city, country].filter(Boolean).join(", ")}</Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        <View className="mt-6 gap-3">
-          <Field label="Full name">
-            <Input value={fullName} onChangeText={setFullName} />
-          </Field>
-          <Field label="Phone">
-            <Input keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
-          </Field>
-          <View className="flex-row gap-3">
-            <View className="flex-1">
-              <Field label="City">
-                <Input value={city} onChangeText={setCity} />
-              </Field>
+          <Text className="mt-4 font-display-black text-2xl text-foreground">
+            {profile?.full_name || "Genesis"}
+          </Text>
+          <Text className="text-sm text-muted-foreground mt-1">
+            {user?.email || "genesis@example.com"}
+          </Text>
+          <View className="mt-4 flex-row gap-2">
+            <View className="rounded-full bg-white/5 px-3 py-1 border border-white/10">
+              <Text className="text-xs font-semibold text-lime">Premium Member</Text>
             </View>
-            <View className="flex-1">
-              <Field label="Country">
-                <Input value={country} onChangeText={setCountry} />
-              </Field>
+            <View className="rounded-full bg-white/5 px-3 py-1 border border-white/10">
+              <Text className="text-xs font-medium text-foreground">Joined 2026</Text>
             </View>
           </View>
-          <Button onPress={save} disabled={saving} className="h-12 w-full rounded-xl">
-            <Text className="text-sm font-semibold text-primary-foreground">Save changes</Text>
-          </Button>
         </View>
 
-        <View className="mt-6 rounded-2xl border border-white/[0.06] bg-card p-4">
-          <View className="flex-row items-center gap-2">
-            <Zap size={12} color="#b3f835" />
-            <Text className="text-[11px] uppercase tracking-widest text-muted-foreground">Preferences</Text>
-          </View>
-          <Text className="mt-2 text-sm text-muted-foreground">Manage your driving preferences and interests.</Text>
-          <Button variant="outline" onPress={() => router.push("/onboarding")} className="mt-3 h-10 w-full rounded-xl">
-            <Text className="text-sm font-semibold text-foreground">Update preferences</Text>
-          </Button>
-        </View>
+        {/* Settings Hub Groups */}
+        <SettingsGroup title="Account">
+          <SettingsRow icon={User} title="Personal Information" />
+          <SettingsRow icon={CreditCard} title="Payment Methods" value="Visa •••• 4242" />
+          <SettingsRow icon={Shield} title="Security & Privacy" isLast />
+        </SettingsGroup>
 
-        <Button
-          variant="outline"
-          onPress={signOut}
-          className="mt-6 h-11 w-full rounded-xl border-destructive/40 bg-destructive/10"
+        <SettingsGroup title="Preferences">
+          <SettingsRow 
+            icon={Moon} 
+            title="Dark Mode" 
+            showToggle 
+            toggleValue={darkMode} 
+            onToggle={setDarkMode} 
+          />
+          <SettingsRow 
+            icon={Bell} 
+            title="Push Notifications" 
+            showToggle 
+            toggleValue={notifications} 
+            onToggle={setNotifications}
+            isLast 
+          />
+        </SettingsGroup>
+
+        <SettingsGroup title="Support">
+          <SettingsRow icon={HelpCircle} title="Help Center & FAQ" />
+          <SettingsRow icon={FileText} title="Terms of Service" isLast />
+        </SettingsGroup>
+
+        <Pressable 
+          onPress={() => supabase.auth.signOut()}
+          className="mt-8 flex-row items-center justify-center gap-2 rounded-2xl bg-red-500/10 py-4 border border-red-500/20"
         >
-          <LogOut size={16} color="#ee343b" />
-          <Text className="text-sm font-semibold text-destructive">Sign out</Text>
-        </Button>
+          <LogOut size={18} color="#ee343b" />
+          <Text className="font-semibold text-red-500">Sign Out</Text>
+        </Pressable>
+
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+// Minimal mock icon for Terms of Service since it wasn't imported at top
+function FileText({ size, color }: { size: number, color: string }) {
   return (
-    <View className="gap-1.5">
-      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
-      {children}
-    </View>
+    <View style={{ width: size, height: size, borderWidth: 1.5, borderColor: color, borderRadius: 2 }} />
   );
 }

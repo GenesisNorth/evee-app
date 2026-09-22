@@ -121,7 +121,7 @@ export default function ChargeScreen() {
           <QrCode size={20} color="#b3f835" />
         </View>
         <Text className="flex-1 text-center font-display-black text-sm text-[#060606]">SCAN TO CHARGE</Text>
-        <View className="h-12 w-12" /> {/* Spacer for balance */}
+        <View className="h-12 w-12" />
       </Animated.View>
     </View>
   );

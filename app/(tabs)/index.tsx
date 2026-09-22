@@ -1,3 +1,4 @@
+// Cache bust
 import { Image, Pressable, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,6 +19,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useProfile } from "@/hooks/use-profile";
 import { VehicleCard } from "@/components/vehicle-card";
+import { WalletStack } from "@/components/wallet-stack";
 import type { Vehicle } from "@/lib/types";
 
 function TopBar({ unread = 2 }: { unread?: number }) {
@@ -156,7 +158,7 @@ export default function HomeScreen() {
     },
   });
 
-  const firstName = profile?.full_name?.split(" ")[0] ?? "Driver";
+  const firstName = profile?.full_name?.split(" ")[0] ?? "Genesis";
   const location = [profile?.city, profile?.country].filter(Boolean).join(", ") || undefined;
 
   return (
@@ -165,7 +167,11 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 140 }} className="px-5 pt-4">
         <View className="gap-5">
           <WelcomeCard name={firstName} city={location} avatarUrl={profile?.avatar_url ?? undefined} />
-          <HeroCard />
+          
+          <View className="mt-12 mb-4 z-50">
+            <WalletStack />
+          </View>
+          
           <EcosystemGrid />
           <View className="pt-2">
             <View className="mb-3 flex-row items-end justify-between">
