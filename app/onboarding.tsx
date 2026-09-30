@@ -19,7 +19,7 @@ const uses = [
   { id: "ride_hail", label: "Ride-hail / e-hailing", hint: "Uber, Bolt, InDrive" },
 ];
 const bodyTypes = ["sedan", "suv", "hatchback", "pickup", "van"];
-const interestOptions = ["finance", "insure", "charge", "service", "learn", "connect"];
+const interestOptions = ["finance", "charge", "service", "learn", "connect"];
 const budgets = [
   { min: 20000, max: 30000, label: "$20k — $30k" },
   { min: 30000, max: 45000, label: "$30k — $45k" },

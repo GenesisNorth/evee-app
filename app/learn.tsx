@@ -1,6 +1,7 @@
 import { Pressable, Text, View, Image } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { ChevronRight, Clock, BookOpen } from "lucide-react-native";
+import { useRouter } from "expo-router";
 import { PageHeader } from "@/components/page-header";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
@@ -37,6 +38,7 @@ const ARTICLES = [
 ];
 
 export default function LearnScreen() {
+  const router = useRouter();
   return (
     <View className="flex-1 bg-background">
       <PageHeader title="Journal" subtitle="Master the EV lifestyle" showBack />
@@ -45,7 +47,7 @@ export default function LearnScreen() {
         
         {/* Featured Article */}
         <Animated.View entering={FadeInDown.springify()} className="mb-8">
-          <Pressable className="overflow-hidden rounded-3xl border border-white/10 bg-card">
+          <Pressable onPress={() => router.push(`/article/${ARTICLES[0].id}`)} className="overflow-hidden rounded-3xl border border-white/10 bg-card">
             <View className="relative h-64 w-full">
               <Image 
                 source={{ uri: ARTICLES[0].image }} 
@@ -79,7 +81,7 @@ export default function LearnScreen() {
         <View className="gap-4">
           {ARTICLES.slice(1).map((article, i) => (
             <Animated.View key={article.id} entering={FadeInDown.delay((i + 1) * 100).springify()}>
-              <Pressable className="flex-row items-center gap-4 rounded-2xl border border-white/5 bg-card p-3">
+              <Pressable onPress={() => router.push(`/article/${article.id}`)} className="flex-row items-center gap-4 rounded-2xl border border-white/5 bg-card p-3">
                 <Image 
                   source={{ uri: article.image }} 
                   className="h-24 w-24 rounded-xl"

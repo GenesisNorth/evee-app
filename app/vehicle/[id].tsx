@@ -1,5 +1,5 @@
 import { useState, type ComponentType } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, Modal, KeyboardAvoidingView, Platform } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,11 +12,11 @@ import {
   LoaderCircle,
   MapPin,
   MessageCircle,
-  ShieldCheck,
   TrendingDown,
   Users,
   Wallet,
   Zap,
+  ShieldCheck,
   type LucideProps,
 } from "lucide-react-native";
 import Toast from "react-native-toast-message";
@@ -27,6 +27,8 @@ import { PageHeader } from "@/components/page-header";
 import { SaveButton } from "@/components/save-button";
 import { VehicleImage } from "@/components/vehicle-image";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { Vehicle } from "@/lib/types";
 
 export default function VehicleDetailScreen() {
@@ -35,6 +37,19 @@ export default function VehicleDetailScreen() {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [reserving, setReserving] = useState(false);
+  const [enquireModalOpen, setEnquireModalOpen] = useState(false);
+  const [enquiryForm, setEnquiryForm] = useState({ name: "", phone: "", location: "", intent: "Purchase", message: "" });
+  const [submittingEnquiry, setSubmittingEnquiry] = useState(false);
+
+  async function submitEnquiry() {
+    setSubmittingEnquiry(true);
+    // Simulate API submission
+    setTimeout(() => {
+      setSubmittingEnquiry(false);
+      setEnquireModalOpen(false);
+      Toast.show({ type: "success", text1: "Enquiry sent! Our team will contact you soon." });
+    }, 1500);
+  }
 
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -95,8 +110,8 @@ export default function VehicleDetailScreen() {
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["garage"] });
       queryClient.invalidateQueries({ queryKey: ["garage-status"] });
-      Toast.show({ type: "success", text1: "Reserved! Find it in your Garage." });
-      router.push("/garage");
+      Toast.show({ type: "success", text1: "Reserved! Find it in your Activity." });
+      router.push("/activity");
     } catch (e) {
       Toast.show({ type: "error", text1: e instanceof Error ? e.message : "Could not reserve" });
     } finally {
@@ -145,10 +160,16 @@ export default function VehicleDetailScreen() {
             <Text className="mt-1 font-display-black text-2xl text-foreground">{formatCurrency(Number(vehicle.price))}</Text>
             <Text className="text-[11px] text-muted-foreground">or ~{formatCurrency(estMonthly)}/mo · 60 mo</Text>
           </View>
-          <View className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1">
-            <Text className="text-[10px] font-semibold uppercase tracking-widest text-lime">
-              {vehicle.is_new ? "New" : "Certified"}
-            </Text>
+          <View className="items-end gap-2">
+            <View className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1">
+              <Text className="text-[10px] font-semibold uppercase tracking-widest text-lime">
+                {vehicle.is_new ? "New" : "Certified"}
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-1 rounded-full bg-white/[0.06] px-2 py-1">
+              <ShieldCheck size={12} color="#b3f835" />
+              <Text className="text-[10px] font-semibold text-muted-foreground">Evee Verified</Text>
+            </View>
           </View>
         </View>
 
@@ -167,13 +188,29 @@ export default function VehicleDetailScreen() {
           </View>
         )}
 
+        <View className="mt-5 rounded-2xl border border-white/[0.06] bg-card p-4">
+          <Text className="mb-3 font-display-black text-sm text-foreground">Specifications</Text>
+          <View className="flex-row justify-between border-b border-white/5 py-2">
+            <Text className="text-xs text-muted-foreground">Drivetrain</Text>
+            <Text className="text-xs font-semibold text-foreground">{vehicle.drivetrain.toUpperCase()}</Text>
+          </View>
+          <View className="flex-row justify-between border-b border-white/5 py-2">
+            <Text className="text-xs text-muted-foreground">Body Type</Text>
+            <Text className="text-xs font-semibold text-foreground capitalize">{vehicle.body_type}</Text>
+          </View>
+          <View className="flex-row justify-between py-2">
+            <Text className="text-xs text-muted-foreground">Model Year</Text>
+            <Text className="text-xs font-semibold text-foreground">{vehicle.year}</Text>
+          </View>
+        </View>
+
         <View className="mt-5 flex-row items-center gap-3 rounded-2xl border border-white/[0.06] bg-card p-4">
           <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10">
             <MapPin size={18} color="#b3f835" />
           </View>
           <View className="flex-1">
             <Text className="font-display text-sm text-foreground">Available Now</Text>
-            <Text className="text-[11px] text-muted-foreground">In stock at Evee Hub, Victoria Island</Text>
+            <Text className="text-[11px] text-muted-foreground">Location: Lagos, Nigeria</Text>
           </View>
         </View>
 
@@ -203,20 +240,12 @@ export default function VehicleDetailScreen() {
             <Text className="font-display text-sm text-foreground">Apply for finance</Text>
             <Text className="text-[10px] text-muted-foreground">Get pre-qualified</Text>
           </Pressable>
-          <Pressable
-            onPress={() => router.push(`/insure/${vehicle.id}`)}
-            className="flex-1 gap-1 rounded-2xl border border-white/[0.06] bg-card p-4"
-          >
-            <ShieldCheck size={20} color="#b3f835" />
-            <Text className="font-display text-sm text-foreground">Get insured</Text>
-            <Text className="text-[10px] text-muted-foreground">Instant quotes</Text>
-          </Pressable>
         </View>
 
         <View className="mt-6 flex-row gap-3">
           <Button
             variant="outline"
-            onPress={() => Toast.show({ type: "info", text1: "Connecting you to an agent..." })}
+            onPress={() => setEnquireModalOpen(true)}
             className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl"
           >
             <MessageCircle size={16} color="#fafafa" />
@@ -238,6 +267,41 @@ export default function VehicleDetailScreen() {
           </Button>
         </View>
       </Animated.ScrollView>
+
+      <Modal visible={enquireModalOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEnquireModalOpen(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-background">
+          <View className="flex-row items-center justify-between border-b border-white/10 px-5 py-4">
+            <Text className="font-display-black text-lg text-foreground">Start Purchase</Text>
+            <Pressable onPress={() => setEnquireModalOpen(false)}>
+              <Text className="text-sm font-semibold text-primary">Cancel</Text>
+            </Pressable>
+          </View>
+          <ScrollView className="p-5" contentContainerStyle={{ paddingBottom: 40 }}>
+            <View className="gap-5">
+              <View className="gap-2">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Full Name</Label>
+                <Input placeholder="John Doe" value={enquiryForm.name} onChangeText={(t) => setEnquiryForm({ ...enquiryForm, name: t })} />
+              </View>
+              <View className="gap-2">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Phone Number</Label>
+                <Input placeholder="+234..." keyboardType="phone-pad" value={enquiryForm.phone} onChangeText={(t) => setEnquiryForm({ ...enquiryForm, phone: t })} />
+              </View>
+              <View className="gap-2">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Location</Label>
+                <Input placeholder="Lagos, Nigeria" value={enquiryForm.location} onChangeText={(t) => setEnquiryForm({ ...enquiryForm, location: t })} />
+              </View>
+              <View className="gap-2">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Message (Optional)</Label>
+                <Input placeholder="I'm interested in..." value={enquiryForm.message} onChangeText={(t) => setEnquiryForm({ ...enquiryForm, message: t })} />
+              </View>
+              <Button disabled={submittingEnquiry || !enquiryForm.name || !enquiryForm.phone} onPress={submitEnquiry} className="mt-4 h-12 w-full rounded-xl">
+                {submittingEnquiry && <LoaderCircle size={16} color="#060606" />}
+                <Text className="text-sm font-semibold text-primary-foreground">Submit Enquiry</Text>
+              </Button>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }

@@ -9,11 +9,12 @@ import {
   ArrowRight,
   Bell,
   GraduationCap,
-  ShieldCheck,
   Users,
   Wallet,
   Wrench,
   Zap,
+  ShieldCheck,
+  Calculator,
   type LucideIcon,
 } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
@@ -110,9 +111,9 @@ const tiles: { label: string; hint: string; icon: LucideIcon; to: any }[] = [
   { label: "Finance", hint: "Flexible options", icon: Wallet, to: "/finance-portal" },
   { label: "Charge", hint: "Find stations", icon: Zap, to: "/charge" },
   { label: "Service", hint: "Book & maintain", icon: Wrench, to: "/service" },
-  { label: "Insure", hint: "Protect your EV", icon: ShieldCheck, to: "/insure-portal" },
   { label: "Learn", hint: "Grow your knowledge", icon: GraduationCap, to: "/learn" },
   { label: "Connect", hint: "People & community", icon: Users, to: "/connect" },
+  { label: "Calculator", hint: "Savings vs Petrol", icon: Calculator, to: "/calculator" },
 ];
 
 function EcosystemGrid() {
@@ -191,7 +192,66 @@ export default function HomeScreen() {
               ))}
             </View>
           </View>
+          <JournalPreviewsSection />
         </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+function JournalPreviewsSection() {
+  const router = useRouter();
+  const articles = [
+    {
+      tag: "Guide",
+      title: "EV Charging at Home: The Complete Setup",
+      desc: "Everything you need to know about installing a Level 2 charger, costs, and getting the best overnight charge.",
+      readTime: "5 min read",
+      image: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=800&auto=format&fit=crop",
+    },
+    {
+      tag: "Insights",
+      title: "Total Cost of Ownership: EV vs Petrol",
+      desc: "We break down fuel, maintenance, and depreciation over 5 years to show why EVs save you more.",
+      readTime: "7 min read",
+      image: "https://images.unsplash.com/photo-1620804470550-93a0058b4bce?q=80&w=800&auto=format&fit=crop",
+    },
+    {
+      tag: "News",
+      title: "Nigeria's EV Policy: What It Means for You",
+      desc: "New import duty exemptions and charging infrastructure plans could make 2026 the year of the EV in Nigeria.",
+      readTime: "4 min read",
+      image: "https://images.unsplash.com/photo-1660662243734-716b1e6ce48e?q=80&w=800&auto=format&fit=crop",
+    },
+  ];
+
+  return (
+    <View className="mt-2">
+      <View className="mb-3 flex-row items-end justify-between">
+        <View>
+          <Text className="font-display-black text-lg text-foreground">EVEE Journal</Text>
+          <Text className="text-[11px] text-muted-foreground">Latest guides and insights</Text>
+        </View>
+        <Pressable onPress={() => router.push("/learn")}>
+          <Text className="text-xs text-lime">Read more</Text>
+        </Pressable>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="overflow-visible">
+        {articles.map((article, i) => {
+          return (
+            <Pressable key={i} onPress={() => router.push(`/article/${i + 1}`)} className={`w-[260px] rounded-2xl border border-white/[0.06] bg-card overflow-hidden ${i < articles.length - 1 ? "mr-4" : ""}`}>
+              <Image source={{ uri: article.image }} className="h-[100px] w-full" style={{ resizeMode: "cover" }} />
+              <View className="p-4">
+                <View className="flex-row items-center justify-between mb-1">
+                  <Text className="text-[10px] font-bold uppercase tracking-widest text-lime">{article.tag}</Text>
+                  <Text className="text-[10px] text-muted-foreground">{article.readTime}</Text>
+                </View>
+                <Text className="font-display text-sm text-foreground">{article.title}</Text>
+                <Text className="mt-1 text-[11px] text-muted-foreground leading-4" numberOfLines={2}>{article.desc}</Text>
+              </View>
+            </Pressable>
+          );
+        })}
       </ScrollView>
     </View>
   );

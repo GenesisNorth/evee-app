@@ -13,6 +13,7 @@
       "bundleIdentifier": "com.evee.mobile"
     },
     "android": {
+      "package": "com.evee.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#040404",
         "foregroundImage": "./assets/android-icon-foreground.png",

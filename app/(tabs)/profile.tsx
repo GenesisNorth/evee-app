@@ -10,9 +10,15 @@ import {
   Moon, 
   Shield, 
   HelpCircle,
+  Gift,
+  Building2,
+  FileText,
+  ShieldCheck,
+  RefreshCw,
   ChevronRight,
   LogOut
 } from "lucide-react-native";
+import Toast from "react-native-toast-message";
 import { useSession } from "@/hooks/use-session";
 import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/lib/supabase";
@@ -37,6 +43,7 @@ function SettingsRow({
   showToggle, 
   toggleValue, 
   onToggle,
+  onPress,
   isLast 
 }: { 
   icon: any, 
@@ -45,10 +52,11 @@ function SettingsRow({
   showToggle?: boolean,
   toggleValue?: boolean,
   onToggle?: (v: boolean) => void,
+  onPress?: () => void,
   isLast?: boolean 
 }) {
   return (
-    <Pressable className={`flex-row items-center px-4 py-3.5 ${!isLast ? 'border-b border-white/5' : ''}`}>
+    <Pressable onPress={onPress} className={`flex-row items-center px-4 py-3.5 ${!isLast ? 'border-b border-white/5' : ''}`}>
       <View className="h-8 w-8 items-center justify-center rounded-lg bg-white/5 mr-3">
         <Icon size={16} color="#fafafa" />
       </View>
@@ -116,7 +124,18 @@ export default function ProfileScreen() {
         <SettingsGroup title="Account">
           <SettingsRow icon={User} title="Personal Information" />
           <SettingsRow icon={CreditCard} title="Payment Methods" value="Visa •••• 4242" />
+          <SettingsRow icon={Gift} title="Referral Program" value="Earn $500" onPress={() => router.push("/referral")} />
           <SettingsRow icon={Shield} title="Security & Privacy" isLast />
+        </SettingsGroup>
+
+        <SettingsGroup title="Enterprise">
+          <SettingsRow icon={Building2} title="Evee for Business" value="Fleet solutions" onPress={() => router.push("/fleet")} isLast />
+        </SettingsGroup>
+
+        <SettingsGroup title="Ownership Services">
+          <SettingsRow icon={FileText} title="Documents Vault" onPress={() => router.push("/documents")} />
+          <SettingsRow icon={ShieldCheck} title="EV Insurance" onPress={() => router.push("/insurance")} />
+          <SettingsRow icon={RefreshCw} title="Resale & Trade-in" onPress={() => router.push("/trade-in")} isLast />
         </SettingsGroup>
 
         <SettingsGroup title="Preferences">
@@ -132,7 +151,19 @@ export default function ProfileScreen() {
             title="Push Notifications" 
             showToggle 
             toggleValue={notifications} 
-            onToggle={setNotifications}
+            onToggle={(v) => {
+              setNotifications(v);
+              if (v) {
+                setTimeout(() => {
+                  Toast.show({
+                    type: "success",
+                    text1: "Evee Updates",
+                    text2: "A new Tesla Model 3 just arrived in your area!",
+                    visibilityTime: 4000
+                  });
+                }, 2000);
+              }
+            }}
             isLast 
           />
         </SettingsGroup>
@@ -155,9 +186,4 @@ export default function ProfileScreen() {
   );
 }
 
-// Minimal mock icon for Terms of Service since it wasn't imported at top
-function FileText({ size, color }: { size: number, color: string }) {
-  return (
-    <View style={{ width: size, height: size, borderWidth: 1.5, borderColor: color, borderRadius: 2 }} />
-  );
-}
+// Removed mock FileText as it's now imported from lucide-react-native

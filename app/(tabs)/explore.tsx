@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import Slider from "@react-native-community/slider";
-import { GitCompare, Search, SlidersHorizontal } from "lucide-react-native";
+import { GitCompare, Search, SlidersHorizontal, Heart } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { VehicleCard } from "@/components/vehicle-card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import type { Vehicle } from "@/lib/types";
 
 const bodyTypes = ["all", "sedan", "suv", "hatchback", "pickup", "van"];
+const makes = ["all", "tesla", "byd", "mg", "nissan", "hyundai", "kia"];
+const conditions = ["all", "new", "used"];
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
@@ -22,6 +24,9 @@ export default function ExploreScreen() {
   const [bodyType, setBodyType] = useState("all");
   const [maxPrice, setMaxPrice] = useState(200000);
   const [minRange, setMinRange] = useState(0);
+  const [make, setMake] = useState("all");
+  const [condition, setCondition] = useState("all");
+  const [availability, setAvailability] = useState("available");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -31,7 +36,7 @@ export default function ExploreScreen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vehicles")
-        .select("id, make, model, year, price, range_km, battery_kwh, acceleration_0_100, image_url, tagline, body_type")
+        .select("id, make, model, year, price, range_km, battery_kwh, acceleration_0_100, image_url, tagline, body_type, is_new")
         .order("price");
       if (error) throw error;
       return data as Vehicle[];
@@ -42,13 +47,20 @@ export default function ExploreScreen() {
     if (!vehicles) return [];
     const q = query.trim().toLowerCase();
     return vehicles.filter((v) => {
+      const isPreorder = v.year > 2024;
+      if (availability === "available" && isPreorder) return false;
+      if (availability === "preorder" && !isPreorder) return false;
+
       if (bodyType !== "all" && v.body_type !== bodyType) return false;
+      if (make !== "all" && v.make.toLowerCase() !== make) return false;
+      if (condition === "new" && !v.is_new) return false;
+      if (condition === "used" && v.is_new) return false;
       if (v.price > maxPrice) return false;
       if (v.range_km < minRange) return false;
       if (!q) return true;
       return v.make.toLowerCase().includes(q) || v.model.toLowerCase().includes(q);
     });
-  }, [vehicles, query, bodyType, maxPrice, minRange]);
+  }, [vehicles, query, bodyType, maxPrice, minRange, make, condition, availability]);
 
   return (
     <View className="flex-1 bg-background">
@@ -61,18 +73,35 @@ export default function ExploreScreen() {
             <Text className="text-[10px] font-semibold uppercase tracking-widest text-lime">Marketplace</Text>
             <Text className="font-display-black text-2xl text-foreground">Find your EV</Text>
           </View>
-          <Pressable
-            onPress={() => {
-              setCompareMode(!compareMode);
-              if (compareMode) setSelectedIds([]);
-            }}
-            accessibilityLabel="Compare vehicles"
-            className={cn(
-              "h-10 w-10 items-center justify-center rounded-full border",
-              compareMode ? "border-primary bg-primary/20" : "border-white/10 bg-white/[0.04]"
-            )}
-          >
-            <GitCompare size={16} color={compareMode ? "#b3f835" : "#fafafa"} />
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => router.push("/favorites")}
+              className="h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]"
+            >
+              <Heart size={16} color="#fafafa" />
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setCompareMode(!compareMode);
+                if (compareMode) setSelectedIds([]);
+              }}
+              accessibilityLabel="Compare vehicles"
+              className={cn(
+                "h-10 w-10 items-center justify-center rounded-full border",
+                compareMode ? "border-primary bg-primary/20" : "border-white/10 bg-white/[0.04]"
+              )}
+            >
+              <GitCompare size={16} color={compareMode ? "#b3f835" : "#fafafa"} />
+            </Pressable>
+          </View>
+        </View>
+
+        <View className="mt-4 flex-row rounded-xl border border-white/10 bg-white/[0.03] p-1">
+          <Pressable onPress={() => setAvailability('available')} className={cn("flex-1 items-center justify-center rounded-lg py-2", availability === 'available' ? "bg-primary/20" : "")}>
+            <Text className={cn("text-xs font-semibold", availability === 'available' ? "text-lime" : "text-muted-foreground")}>Available Now</Text>
+          </Pressable>
+          <Pressable onPress={() => setAvailability('preorder')} className={cn("flex-1 items-center justify-center rounded-lg py-2", availability === 'preorder' ? "bg-primary/20" : "")}>
+            <Text className={cn("text-xs font-semibold", availability === 'preorder' ? "text-lime" : "text-muted-foreground")}>Preorder</Text>
           </Pressable>
         </View>
 
@@ -119,7 +148,47 @@ export default function ExploreScreen() {
         </ScrollView>
 
         {filtersOpen && (
-          <View className="mt-3 gap-3 rounded-2xl border border-white/[0.06] bg-card p-4">
+          <View className="mt-3 gap-5 rounded-2xl border border-white/[0.06] bg-card p-4">
+            <View>
+              <Text className="mb-2 text-xs text-muted-foreground">Make</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View className="flex-row gap-2">
+                  {makes.map((m) => (
+                    <Pressable
+                      key={m}
+                      onPress={() => setMake(m)}
+                      className={cn(
+                        "rounded-lg border px-3 py-1",
+                        make === m ? "border-primary/60 bg-primary/15" : "border-white/10 bg-white/[0.03]"
+                      )}
+                    >
+                      <Text className={cn("text-xs capitalize", make === m ? "text-lime" : "text-muted-foreground")}>
+                        {m}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+            <View>
+              <Text className="mb-2 text-xs text-muted-foreground">Condition</Text>
+              <View className="flex-row gap-2">
+                {conditions.map((c) => (
+                  <Pressable
+                    key={c}
+                    onPress={() => setCondition(c)}
+                    className={cn(
+                      "flex-1 items-center rounded-lg border py-1.5",
+                      condition === c ? "border-primary/60 bg-primary/15" : "border-white/10 bg-white/[0.03]"
+                    )}
+                  >
+                    <Text className={cn("text-xs capitalize", condition === c ? "text-lime" : "text-muted-foreground")}>
+                      {c}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
             <View>
               <View className="mb-1 flex-row justify-between">
                 <Text className="text-xs text-muted-foreground">Max price</Text>

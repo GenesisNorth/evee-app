@@ -2,13 +2,13 @@ import { Text, View, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { ScrollView } from "react-native-gesture-handler";
 import { useQuery } from "@tanstack/react-query";
-import { ShieldCheck, Wallet, Clock, CheckCircle, Calendar } from "lucide-react-native";
+import { Wallet, Clock, CheckCircle, Calendar } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/hooks/use-session";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
-import type { FinancingApplication, InsuranceQuote } from "@/lib/types";
+import type { FinancingApplication } from "@/lib/types";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 export default function ActivityScreen() {
@@ -28,20 +28,7 @@ export default function ActivityScreen() {
     },
   });
 
-  const { data: insurance } = useQuery({
-    enabled: !!user,
-    queryKey: ["ins", user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("insurance_quotes")
-        .select("*, vehicle:vehicles(make, model)")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false });
-      return (data ?? []) as unknown as InsuranceQuote[];
-    },
-  });
-
-  const empty = (!financing || financing.length === 0) && (!insurance || insurance.length === 0);
+  const empty = !financing || financing.length === 0;
 
   return (
     <View className="flex-1 bg-background">
@@ -51,7 +38,7 @@ export default function ActivityScreen() {
           {empty && (
             <View className="rounded-2xl border border-white/[0.06] bg-card p-6">
               <Text className="text-center text-sm text-muted-foreground">
-                Nothing here yet. Apply for financing or an insurance plan to get started.
+                Nothing here yet. Apply for financing to get started.
               </Text>
             </View>
           )}
@@ -141,35 +128,6 @@ export default function ActivityScreen() {
             </View>
           )}
 
-          {insurance && insurance.length > 0 && (
-            <View>
-              <View className="mb-2 flex-row items-center gap-2">
-                <ShieldCheck size={14} color="#9b9fa3" />
-                <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Insurance</Text>
-              </View>
-              <View className="gap-2">
-                {insurance.map((q, index) => (
-                  <Animated.View 
-                    key={q.id} 
-                    entering={FadeInDown.delay(index * 150 + 200).springify()}
-                    className="flex-row items-start justify-between rounded-2xl border border-white/[0.06] bg-card p-4"
-                  >
-                    <View>
-                      <Text className="font-display-black text-sm text-foreground">
-                        {q.vehicle?.make} {q.vehicle?.model}
-                      </Text>
-                      <Text className="mt-0.5 text-[11px] text-muted-foreground">
-                        {q.provider} · {q.plan_tier} · {formatCurrency(Number(q.annual_premium))}/yr
-                      </Text>
-                    </View>
-                    <View className="rounded-full bg-primary/15 px-2 py-0.5">
-                      <Text className="text-[10px] uppercase text-lime">{q.status}</Text>
-                    </View>
-                  </Animated.View>
-                ))}
-              </View>
-            </View>
-          )}
         </View>
       </ScrollView>
     </View>

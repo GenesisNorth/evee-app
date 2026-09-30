@@ -3,19 +3,17 @@ import { Tabs, type BottomTabBarProps } from "expo-router/js-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { Car, House, Store, User, type LucideIcon } from "lucide-react-native";
+import { House, Store, User, type LucideIcon } from "lucide-react-native";
 import { cn } from "@/lib/utils";
 
 const iconFor: Record<string, LucideIcon> = {
   index: House,
   explore: Store,
-  garage: Car,
   profile: User,
 };
 const labelFor: Record<string, string> = {
   index: "Home",
   explore: "Marketplace",
-  garage: "Garage",
   profile: "Profile",
 };
 
@@ -106,7 +104,6 @@ export default function TabsLayout() {
     <Tabs tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index" />
       <Tabs.Screen name="explore" />
-      <Tabs.Screen name="garage" />
       <Tabs.Screen name="profile" />
     </Tabs>
   );

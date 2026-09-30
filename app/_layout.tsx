@@ -79,11 +79,14 @@ function RootLayoutNav() {
       <Stack.Screen name="connect" />
       <Stack.Screen name="finance-portal" />
       <Stack.Screen name="finance/apply" />
-      <Stack.Screen name="insure-portal" />
-      <Stack.Screen name="insure/quote" />
       <Stack.Screen name="finance/[vehicleId]" />
-      <Stack.Screen name="insure/[vehicleId]" />
       <Stack.Screen name="activity" />
+      <Stack.Screen name="fleet" />
+      <Stack.Screen name="solar-setup" />
+      <Stack.Screen name="documents" />
+      <Stack.Screen name="insurance" />
+      <Stack.Screen name="trade-in" />
+      <Stack.Screen name="favorites" />
     </Stack>
   );
 }

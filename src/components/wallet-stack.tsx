@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Battery, Key, Lock, Unlock, Zap, Gauge } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width - 40;
@@ -34,8 +35,17 @@ const MY_FLEET = [
     trim: "Turbo S",
     battery: 100,
     range: 350,
-    image: require("../../assets/images/hero-ev.jpg"), // Reusing for mock
+    image: require("../../assets/images/hero-ev.jpg"),
     color: "#0a2540"
+  },
+  {
+    id: "3",
+    model: "BYD Seal",
+    trim: "Performance",
+    battery: 72,
+    range: 520,
+    image: require("../../assets/images/hero-ev.jpg"),
+    color: "#2d1b4e"
   }
 ];
 
@@ -50,6 +60,7 @@ interface WalletCardProps {
 
 function WalletCard({ vehicle, index, totalCards, isExpanded, onPress, isActive }: WalletCardProps) {
   const [locked, setLocked] = useState(true);
+  const router = useRouter();
 
   // Derived value for smooth transitions
   const progress = useDerivedValue(() => {
@@ -135,9 +146,9 @@ function WalletCard({ vehicle, index, totalCards, isExpanded, onPress, isActive 
               </Pressable>
             </View>
             
-            <View className="h-10 px-4 rounded-full bg-lime items-center justify-center">
+            <Pressable onPress={(e) => { e.stopPropagation(); router.push("/battery-health"); }} className="h-10 px-4 rounded-full bg-lime items-center justify-center">
               <Text className="font-semibold text-[#060606] text-xs">Manage</Text>
-            </View>
+            </Pressable>
           </View>
         </View>
       </Pressable>
@@ -148,8 +159,21 @@ function WalletCard({ vehicle, index, totalCards, isExpanded, onPress, isActive 
 export function WalletStack() {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  const containerHeight = useDerivedValue(() => {
+    const targetHeight = isExpanded 
+      ? CARD_HEIGHT + (MY_FLEET.length - 1) * EXPANDED_OFFSET
+      : CARD_HEIGHT + (MY_FLEET.length - 1) * COLLAPSED_OFFSET;
+    return withSpring(targetHeight, { damping: 15, stiffness: 100 });
+  });
+
+  const containerStyle = useAnimatedStyle(() => {
+    return {
+      height: containerHeight.value,
+    };
+  });
+
   return (
-    <View className="w-full relative" style={{ height: isExpanded ? CARD_HEIGHT * MY_FLEET.length + 20 : CARD_HEIGHT + (MY_FLEET.length - 1) * COLLAPSED_OFFSET }}>
+    <Animated.View className="w-full relative" style={containerStyle}>
       <View className="flex-row justify-between items-end mb-4 absolute -top-10 left-0 right-0 z-50">
         <Text className="font-display-black text-lg text-foreground">Virtual Garage</Text>
         <Pressable onPress={() => setIsExpanded(!isExpanded)}>
@@ -172,6 +196,6 @@ export function WalletStack() {
           />
         ))}
       </View>
-    </View>
+    </Animated.View>
   );
 }
